@@ -1,46 +1,56 @@
-#!/usr/bin/python3
-"""a base moduleclass"""
+'''
+This module defines a class that raises an Exception with the 
+message area() is not implemented
+'''
 
-class metaClass(type):
-    """a meta class"""
+
+class BaseMetaClass(type):
+    """
+    overrides.
+    """
     def __dir__(cls):
-        """this method exclude the init subclass from the dir"""
-        return [attr for attr in super().__dir__() if attr != "__init_subclass__"
+        return [attribute for attribute in super().__dir__() if attribute != '__init_subclass__']
 
 
-class BaseGeometry(metaClass):
+class BaseGeometry(metaclass=BaseMetaClass):
+    """
+   Simple empty class 
+    Contains a function tha excludes the attribute 
+    __init_subclass_ from dir()
+    """
+    def __dir__(cls):
+        return [attribute for attribute in super().__dir__() if attribute != '__init_subclass__']
 
-    """a method that calculates the area but is not implemented"""
     def area(self):
-        """an exception raised"""
         raise Exception("area() is not implemented")
 
-
     def integer_validator(self, name, value):
-        self.name = "name"
-        """
-        value: validating the value
-        """
-        if type(value) is int:
-            if value <= 0:
-                raise ValueError("{} must be greater than 0".format(name))
-            else:
-                self.value = value
-        else:
+        if not isinstance(value, int):
             raise TypeError("{} must be an integer".format(name))
+        if value <= 0:
+            raise ValueError("{} must be greater than 0".format(name))
 
-"""a subclass Rectangle"""
+
 class Rectangle(BaseGeometry):
-    
-    """a method that excludes the __init_subclass__ from the dir"""
-    def __dir__(cls) -> None:
-        attributes = super().__dir__()
-        return [attribute for attribute in attributes if attribute != "__init_subclass__"]
+    '''
+    This is a simple class to represent a rectangle.
 
+   Attributes:
+       width: private attribute.
+       height: private attribute.
+       Inherited function-integer_validator
+    '''
 
-    """Instantiation with width and height"""
+    def __dir__(self):
+        return [attribute for attribute in super().__dir__() if attribute == '__init_subclass__']
+
     def __init__(self, width, height):
-        self.__width = width
-        self.__height = height
+        self.__width = 0
+        self.__height = 0
         self.integer_validator("width", width)
         self.integer_validator("height", height)
+        self.__width = width
+        self.__height = height
+
+    def __str__(self):
+        return "[Rectangle] {}/{}".format(self.__width, self.__height)

@@ -1,56 +1,73 @@
-#!/usr/bin/python3
-"""Defines a class Square"""
+"""
+Module 0-square
+This module defines a Square class with a private instance attribute 'size'.
+"""
 
 
 class Square:
-    """Represents a square
-    Attributes:
-        __size (int): size of a side of the square
+
     """
+   This is a simple class to represent a square.
+
+   Attributes:
+       size: private attribute with no type/value verification
+   """
 
     def __init__(self, size=0):
-        """initializes the square
-            Args:
-                __size (int): size of a size of the square
-            Returns:
-                None
-        """
         self.__size = size
-    @property
-    def size(self):
-        """getter of __size
-        Returns:
-            The size of the square
         """
+       Initialize a Square instance with a given size.
+
+       Parameters:
+           size (int): The size of the square.
+       """
+
+    @property
+    # Retrieve the current size of the square
+    # Returns:
+    # int: The size of the square.
+    def size(self):
         return self.__size
+
     @size.setter
     def size(self, value):
-         """setter of __size
-        Args:
-            value (int): the size of a size of the square
-        Returns:
-            None
         """
-        if type(value) is not int:
+        Set the size of the square.
+
+        Parameters:
+            value (int): The new size of the square.
+
+        Raises:
+            TypeError: If size is not an integer.
+            ValueError: If size is less than 0.
+        """
+
+        if not isinstance(value, int):
             raise TypeError("size must be an integer")
+
         if value < 0:
             raise ValueError("size must be >= 0")
-        else:
-            self.__size = value
+
+        self.__size = value
 
     def area(self):
-        """calculates the square's area
+        """
+        Calculate the area of the square.
+
         Returns:
-            The area of the square
+            int: The area of the square.
         """
         return self.__size ** 2
+
     def my_print(self):
-        """prints the square
-        Returns:
-            None
+        """
+        Print the square with the character #.
+
+        If size is equal to 0, print an empty line.
         """
         if self.__size == 0:
             print()
-            return
-        for i in range(self.__size):
-            print("".join(["#" for j in range(self.__size)]))
+
+        else:
+            for _ in range(self.__size):
+                print("#" * self.__size)

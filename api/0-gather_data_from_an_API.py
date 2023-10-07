@@ -1,34 +1,42 @@
+""" Uses a REST API, fetching data about a given employee
+    (identified by their id passed in as an arg).
+    Returns:
+            information about thir TODO list progress
+"""
+
 import requests
 import sys
 
-if len(sys.argv) != 2:
-    sys.exit(1)
 
-employee_id = int(sys.argv[1])
+base_url = "https://jsonplaceholder.typicode.com"
+employee_id = sys.argv[1]
 
-employee_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
-todos_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}/todos"
-
+# Fetch employee details
+employee_url = "{}/users/{}".format(base_url, employee_id)
 employee_response = requests.get(employee_url)
-todos_response = requests.get(todos_url)
+employee_data = employee_response.json()
 
-if employee_response.status_code != 200 or todos_response.status_code != 200:
+if 'name' not in employee_data:
+    print("Employee not found.")
     sys.exit(1)
 
-employee_data = employee_response.json()
-todo_data = todos_response.json()
-employee_name = employee_data.get("name", "anonymous employee")
+employee_name = employee_data.get('name')
 
-number_of_done_tasks = 0
-total_number_of_tasks = 0
+# Fetch employee's TODO list
+todo_url = "{}/users/{}/todos".format(base_url, employee_id)
+todo_response = requests.get(todo_url)
+todo_data = todo_response.json()
+
+# Calculate progress
+total_tasks = len(todo_data)
+completed_tasks = sum(1 for task in todo_data if task.get("completed"))
+
+# Display progress
+print("Employee {} is done with tasks({}/{}):".format(employee_name,
+      completed_tasks, total_tasks))
+
+# Display completed task titles
 for task in todo_data:
-    if task["completed"]:
-        number_of_done_tasks += 1
-    total_number_of_tasks += 1
-
-
-print(f"Employee {employee_name} is done with tasks ({number_of_done_tasks}/{total_number_of_tasks})")
-
-
-for task in todo_data:
-    print(f"\t{task['title']}")
+    if task.get("completed"):
+        formatted_task_title = "\t {}".format(task.get("title"))
+        print(formatted_task_title)

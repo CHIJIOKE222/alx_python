@@ -1,46 +1,63 @@
+#!/usr/bin/python3
+""" 
+Uses a REST API, fetching data about a given employee
+(identified by their id passed to sript as argument) &
+exports the data (of all tasks owned by user) in the JSON format 
+"""
+
+import json
 import requests
 import sys
-import json
-"""
-Module Name: requests, json, sys
-Description: This module provides functions for network call, command line argument and writing json files
-"""
 
-if len(sys.argv) != 2:
-    sys.exit(1)
+# No execution when file is imported
+if __name__ == "__main__":
+    # Base URL for the REST API
+    base_url = "https://jsonplaceholder.typicode.com"
+    # Get the employee ID from the command-line argument
+    employee_id = sys.argv[1]
 
-employee_id = int(sys.argv[1])
+    # Fetch employee details
+    employee_url = "{}/users/{}".format(base_url, employee_id)
+    employee_response = requests.get(employee_url)
+    employee_data = employee_response.json()
 
-employee_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
-todos_url = f"https://jsonplaceholder.typicode.com/users/{employee_id}/todos"
+    if 'name' not in employee_data:
+        print("Employee not found.")
+        sys.exit(1)
 
-employee_response = requests.get(employee_url)
-todos_response = requests.get(todos_url)
+    employee_name = employee_data.get('username')
 
-if employee_response.status_code != 200 or todos_response.status_code != 200:
-    sys.exit(1)
+    # Fetch employee's TODO list
+    todo_url = "{}/users/{}/todos".format(base_url, employee_id)
+    todo_response = requests.get(todo_url)
+    todo_data = todo_response.json()
 
-employee_data = employee_response.json()
-todo_data = todos_response.json()
-employee_name = employee_data.get("name", "unknown employee")
-employee_username = employee_data.get("username", "unknown employee")
+    # Calculate progress
+    total_tasks = len(todo_data)
+    completed_tasks = sum(1 for task in todo_data if task.get("completed"))
 
-json_filename = f"{employee_id}.json"
+    # Display progress
+    print("Employee {} is done with tasks({}/{}):".format(employee_name,
+                                                          completed_tasks, total_tasks))
 
+    # Display completed task titles
+    for task in todo_data:
+        if task.get("completed"):
+            formatted_task_title = "\t {}".format(task.get("title"))
+            print(formatted_task_title)
 
-tasks_list = []
+    # Exporting to JSON
+    # Prepare data for JSON export
+    user_tasks = []
+    for task in todo_data:
+        task_data = {
+            "task": task.get("title"),
+            "completed": task.get("completed"),
+            "username": employee_name
+        }
+        user_tasks.append(task_data)
 
-for task in todo_data:
-    task_data = {
-        "task": task["title"],
-        "completed": task["completed"],
-        "username": employee_username
-    }
-    tasks_list.append(task_data)
-
-
-user_data = {f"USER_ID {employee_id}": tasks_list}
-
-
-with open(json_filename, mode="w") as json_file:
-    json.dump(user_data, json_file, indent=4)
+    # Create a JSON file
+    output_filename = "{}.json".format(employee_id)
+    with open(output_filename, 'w') as json_file:
+        json.dump({employee_id: user_tasks}, json_file, indent=4)

@@ -1,40 +1,47 @@
+#!/usr/bin/python3
+""" 
+Uses a REST API, fetching data about a given employee
+(identified by their id passed to sript as argument) &
+exports the data (of all tasks owned by user) in the JSON format 
+"""
+
 import json
 import requests
 
-# Function to fetch tasks for a given user ID
-def fetch_user_tasks(user_id):
-    todos_url = f"https://jsonplaceholder.typicode.com/users/{user_id}/todos"
-    todos_response = requests.get(todos_url)
-    if todos_response.status_code != 200:
-        return []  # Return an empty list if there was an error
-    return todos_response.json()
-
-# Function to fetch all user IDs
-def fetch_user_ids():
-    users_url = "https://jsonplaceholder.typicode.com/users"
-    users_response = requests.get(users_url)
-    if users_response.status_code != 200:
-        return []  # Return an empty list if there was an error
-    return [user["id"] for user in users_response.json()]
-
-# Function to export data in JSON format for all tasks from all employees
-def export_todo_all_employees():
-    all_employee_data = {}
-
-    user_ids = fetch_user_ids()
-    for user_id in user_ids:
-        user_tasks = fetch_user_tasks(user_id)
-        employee_name = user_tasks[0]["username"] if user_tasks else "Unknown Employee"
-        
-        #a list of tasks for the current user
-        employee_tasks = [{"username": employee_name, "task": task["title"], "completed": task["completed"]} for task in user_tasks]
-        
-        
-        all_employee_data[user_id] = employee_tasks
-
-    # Export data to JSON file
-    with open("todo_all_employees.json", "w") as json_file:
-        json.dump(all_employee_data, json_file, indent=4)
 
 if __name__ == "__main__":
-    export_todo_all_employees()
+
+    base_url = "https://jsonplaceholder.typicode.com"
+
+    # Fetch data for all employees
+    employee_data = {}
+    for employee_id in range(1, 11):  # Assuming employee IDs range from 1 to 10
+        employee_url = "{}/users/{}".format(base_url, employee_id)
+        employee_response = requests.get(employee_url)
+        employee_info = employee_response.json()
+
+        if 'name' in employee_info:
+            employee_name = employee_info.get('username')
+        else:
+            continue  # Skip this employee if 'name' is not present
+
+        # Fetch employee's TODO list
+        todo_url = "{}/users/{}/todos".format(base_url, employee_id)
+        todo_response = requests.get(todo_url)
+        todo_data = todo_response.json()
+
+        # Prepare data for JSON export
+        user_tasks = []
+        for task in todo_data:
+            task_data = {"username": employee_name,
+                         "task": task['title'], "completed": task['completed']}
+            user_tasks.append(task_data)
+
+        employee_data[employee_id] = user_tasks
+
+    # Create a JSON file for all employees' tasks
+    output_filename = "todo_all_employees.json"
+    with open(output_filename, 'w') as json_file:
+        json.dump(employee_data, json_file)
+
+    print("Data exported to {}.".format(output_filename))
